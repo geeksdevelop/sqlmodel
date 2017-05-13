@@ -1,5 +1,5 @@
 {
-    "name": "root/sqlmodel",
+    "name": "geeksdevelop/sqlmodel",
     "description": "Package to generate the models using the structure of the database tables",
     "license": "MIT",
     "authors": [
