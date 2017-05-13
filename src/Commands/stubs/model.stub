@@ -1,0 +1,22 @@
+<?php
+
+namespace DummyNamespace;
+
+use Illuminate\Database\Eloquent\Model;
+
+class DummyClass extends Model
+{
+	/**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'NameTable';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [DataFillable];
+}
