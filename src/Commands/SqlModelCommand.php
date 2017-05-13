@@ -42,11 +42,15 @@ class SqlModelCommand extends Command
     {
         if($this->checkDataBase($this->checkOptionDB())){
             $this->error('The model is generated with the following name '. $this->tableTitle());
-            $name = '';
-            if ($this->confirm('Do you want to change it? [y|N]')) {
-                $name = $this->ask('Model name');
+            if($this->checkTable($this->argument('table'))){
+                $name = '';
+                if ($this->confirm('Do you want to change it? [y|N]')) {
+                    $name = $this->ask('Model name');
+                }
+                $this->callCommands($name);
+            }else{
+                $this->error('Table '.$this->argument('table').' does not exist in the data base.');
             }
-            $this->callCommands($name);
         }else{
             $name = $this->option('db') ? $this->option('db') : env('DB_DATABASE');
             $this->error('The '.$name.' database does not exist.'); //Verificar la traduccion con yorman
@@ -58,7 +62,7 @@ class SqlModelCommand extends Command
         $option = [
             'name' => $name ? $name : $this->tableTitle(),
             '--table' => $this->argument('table'),
-            '--fillable' => $this->checkTable($this->argument('table'))
+            '--fillable' => $this->getTable($this->argument('table'))
         ]; 
 
         $this->call('sql:model', $option);
@@ -73,7 +77,7 @@ class SqlModelCommand extends Command
     {
         if(empty($db)){
             $db = env('DB_DATABASE');
-        }
+        }     
         $dbs = DB::select('SHOW DATABASES');
         foreach ($dbs as $value) {
             if($value->Database == $db)
@@ -82,12 +86,29 @@ class SqlModelCommand extends Command
         return isset($r) ? true : false;
     }
 
-    protected function checkTable($table='')
+    protected function checkTable()
     {
-        $table = DB::select('DESCRIBE '.$table);
+        if($this->option('db')){
+            $db = $this->option('db');
+        }else{
+            $db = env('DB_DATABASE');
+        }
+        $check = DB::select('select count(*) from INFORMATION_SCHEMA.TABLES where TABLE_TYPE="BASE TABLE" and TABLE_SCHEMA="'.$db.'" and TABLE_NAME ="'.$this->argument('table').'"');
+
+        return $check[0] ? true : false;
+    }
+
+    protected function getTable($table='')
+    {
+        $db = '';
+        if($this->option('db')){
+            $db = $this->option('db');
+        }
+
+        $table = DB::select('DESCRIBE '.$db.'.'.$table);
         $rows = [];
         foreach ($table as $column) {
-            if($column->Field != 'id')
+            if($column->Field != 'id' && $column->Field != 'created_at' && $column->Field != 'updated_at')
                 array_push($rows, $column->Field);
         }
         return $this->tableFields($rows);
